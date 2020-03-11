@@ -3,21 +3,16 @@ class Server
 private:
     Server(/* args */);
     ~Server();
-    Server(const Server&);
+
+    Server(const Server &);
     Server& operator=(const Server&);
-    
+
     /* data */
-        static Server* instance;
+    static Server* instance;
 public:
-    static Server* getServer ();
+    static Server* getServerInstance ();
+
+    int run(int port);
 };
 
-Server::Server(/* args */)
-{
 
-}
-
-Server::~Server()
-{
-    
-}
