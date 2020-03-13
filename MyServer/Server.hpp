@@ -5,14 +5,23 @@ private:
     ~Server();
 
     Server(const Server &);
-    Server& operator=(const Server&);
+//    Server& operator=(const Server&);
 
     /* data */
-    static Server* instance;
-public:
-    static Server* getServerInstance ();
 
+public:
+    static Server *instance;
+
+    static Server *getServerInstance();
+
+    /**
+     * 启动socket
+     * @param port
+     * @return
+     */
     int run(int port);
+
+
 };
 
 
