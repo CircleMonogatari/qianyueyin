@@ -48,22 +48,17 @@ Server *Server::getServerInstance() {
     return instance;
 }
 
-bool InitNetEnv() {
-    // 进行网络环境的初始化操作
-
-    return true;
-}
-
 int Server::run(int port) {
 //调用socket函数返回的文件描述符
     int serverSocket;    //声明两个套接字sockaddr_in结构体变量，分别表示客户端和服务器
     struct sockaddr_in server_addr;
-    struct sockaddr_in clientAddr;
-    int addr_len = sizeof(clientAddr);
+    struct sockaddr_in client_addr;
+    int client_addr_len = sizeof(client_addr);
     int client;
     char buffer[200];
     int iDataNum;    //socket函数，失败返回-1
-    //int socket(int domain, int type, int protocol);    //第一个参数表示使用的地址类型，一般都是ipv4，AF_INET
+    //int socket(int domain, int type, int protocol);
+    // 第一个参数表示使用的地址类型，一般都是ipv4，AF_INET
     //第二个参数表示套接字类型：tcp：面向连接的稳定数据传输SOCK_STREAM
     //第三个参数设置为0
 
@@ -100,7 +95,7 @@ int Server::run(int port) {
         //传出的是客户端地址结构体的实际长度。
         //出错返回-1
 
-        client = accept(serverSocket, (struct sockaddr *) &clientAddr, (socklen_t *) &addr_len);
+        client = accept(serverSocket, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
         if (client < 0) {
 
             perror("accept");
@@ -109,8 +104,9 @@ int Server::run(int port) {
         printf("等待消息...\n");
         //inet_ntoa ip地址转换函数，将网络字节序IP转换为点分十进制IP
         //表达式：char *inet_ntoa (struct in_addr);
-        printf("IP is %s\n", inet_ntoa(clientAddr.sin_addr));
-        printf("Port is %d\n", htons(clientAddr.sin_port));
+        printf("IP is %s\n", inet_ntoa(client_addr.sin_addr));
+        printf("Port is %d\n", htons(client_addr.sin_port));
+
         while (1) {
             printf("读取消息:");
             buffer[0] = '\0';
@@ -139,8 +135,4 @@ int Server::run(int port) {
 }
 
 
-/*
-监听后，一直处于accept阻塞状态，
-直到有客户端连接，
-当客户端如数quit后，断开与客户端的连接
-*/
+

@@ -5,9 +5,10 @@ using namespace std;
 
 int main() {
 
-    auto s = Server::getServerInstance();
+    Server* s = Server::getServerInstance();
 
     cout << "123 " <<endl;
+    s->run(8090);
     return 0;
 
 }
