@@ -173,7 +173,12 @@ int read_all(int sock, char *data, int size) {
     int n = 0;
     int pos = 0;
     char *p = data;
-    do {
+
+    //读取包头 前4个字节
+
+
+
+    while (1) {
         printf("【读到数据了】\n");
         n = 0;
         char buf[64];
@@ -194,7 +199,7 @@ int read_all(int sock, char *data, int size) {
         memcpy(p, buf, n);
         p = p + n;
 
-    } while (n > 0);
+    }
     return pos;
 }
 
