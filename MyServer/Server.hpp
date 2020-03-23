@@ -1,7 +1,10 @@
+
+
 class Server
 {
 private:
     Server(/* args */);
+
     ~Server();
 
     Server(const Server &);
@@ -20,7 +23,6 @@ public:
      * @return
      */
     int run(int port);
-
 
 };
 
