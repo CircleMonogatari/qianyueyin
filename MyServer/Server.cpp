@@ -27,6 +27,7 @@
 
 #include "Chat.h"
 
+
 #define bzero(x, len) (memset((x),'\0', (len)), (void)0)
 #define DATA_LEN 4096
 
@@ -36,6 +37,8 @@ int get_line(int sock, char *buf, int size);
 int read_all(int sock, char *buf, int size);
 
 int chat_data(char *data, int len, char *res_data);
+
+int get_client_buf_size(int client);
 
 Server::Server(/* args */) {
 
@@ -87,7 +90,8 @@ int Server::run(int port) {
     server_addr.sin_port = htons(port);    //ip可是是本服务器的ip，也可以用宏INADDR_ANY代替，代表0.0.0.0，表明所有地址
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);    //对于bind，accept之类的函数，里面套接字参数都是需要强制转换成(struct sockaddr *)
     //bind三个参数：服务器端的套接字的文件描述符，
-    if (bind(serverSocket, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+    int ret = ::bind(serverSocket, (struct sockaddr *) &server_addr, sizeof(server_addr));
+    if (ret < 0) {
         perror("connect");
         return 1;
     }
@@ -100,9 +104,10 @@ int Server::run(int port) {
     }
 
     while (1) {
-        char data[DATA_LEN];
+        char *data = nullptr;
         char res_data[DATA_LEN];
         int data_len = 0;
+        int res_data_n = 0;
 
 
         //调用accept函数后，会进入阻塞状态
@@ -125,31 +130,66 @@ int Server::run(int port) {
         printf("IP is %s\n", inet_ntoa(client_addr.sin_addr));
         printf("Port is %d\n", htons(client_addr.sin_port));
 
+
+
+        //读取包头 前4个字节
+        int buf_len = get_client_buf_size(client);
+        if (buf_len <= 0) {
+            printf("get data len error\n");
+            goto END;
+        }
+
+        //分配数据内存
+        data = (char *) malloc(buf_len);
         //初始化
-        memset(data, 0, 4096);
+        memset(data, 0, buf_len);
+
+        printf("getdata--%x--\n", buf_len);
 
         //读取数据
-        data_len = read_all(client, data, DATA_LEN);
+        data_len = read_all(client, data, buf_len);
         if (data_len <= 0) {
             data_len = 0;
         }
 
         //处理数据
-        int res_data_n = chat_data(data, data_len, res_data);
+        res_data_n = chat_data(data, data_len, res_data);
         //回发数据
+
+
         send(client, res_data, res_data_n, 0);
         printf("\n\n[%s]", res_data);
 
         //回发数据完毕
         printf((char *) "回发数据完毕\n");
 
+        //释放内存
+        END:
+        if (data != nullptr) {
+            free(data);
+            data = nullptr;
+        }
+
         //关闭socket
         close(client);
 
     }
 
+
     close(serverSocket);
     return 0;
+}
+
+int get_client_buf_size(int client) {
+
+    int buf_len = 0;
+    int n = recv(client, &buf_len, 4, 0);
+    if (n != 4) {
+        printf("n != 4 is %d\n", n);
+        return 0;
+    }
+
+    return buf_len;
 }
 
 int chat_data(char *data, int len, char *res_data) {
@@ -169,13 +209,30 @@ int chat_data(char *data, int len, char *res_data) {
     return strlen(p);
 }
 
+int write_all(int sock, char *data, int size) {
+
+
+    char *buf = (char *) malloc(size + 4);
+    memset(buf, 0, size + 4);
+
+    memcpy(buf, &size, 4);
+    memcpy(buf + 4, data, size);
+
+    //发送数据
+    int writed = send(sock, buf, size + 4, 0);
+
+    //释放内存
+    if (buf != nullptr) {
+        free(buf);
+        buf = nullptr;
+    }
+    return writed;
+}
+
 int read_all(int sock, char *data, int size) {
     int n = 0;
     int pos = 0;
     char *p = data;
-
-    //读取包头 前4个字节
-
 
 
     while (1) {
