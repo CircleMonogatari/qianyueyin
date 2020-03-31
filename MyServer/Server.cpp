@@ -144,8 +144,6 @@ int Server::run(int port) {
         //初始化
         memset(data, 0, buf_len);
 
-        printf("getdata--%x--\n", buf_len);
-
         //读取数据
         data_len = read_all(client, data, buf_len);
         if (data_len <= 0) {
@@ -189,7 +187,7 @@ int get_client_buf_size(int client) {
         return 0;
     }
 
-    return buf_len;
+    return ntohl(buf_len);
 }
 
 int chat_data(char *data, int len, char *res_data) {
@@ -213,9 +211,10 @@ int write_all(int sock, char *data, int size) {
 
 
     char *buf = (char *) malloc(size + 4);
-    memset(buf, 0, size + 4);
+    int data_len = htonl(size);
 
-    memcpy(buf, &size, 4);
+    memset(buf, 0, size + 4);
+    memcpy(buf, &data_len, 4);
     memcpy(buf + 4, data, size);
 
     //发送数据

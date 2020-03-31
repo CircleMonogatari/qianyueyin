@@ -51,6 +51,7 @@ public:
 private:
     static vector<User> users;
     static list<string> chatdatas;
+
 };
 
 
