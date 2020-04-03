@@ -39,7 +39,7 @@ int main() {
     printf("1\n");
 
     char *p = (char *) "123456";
-    int p_len = strlen(p);
+    int p_len = htonl(strlen(p));
 
     char *buf = (char *) malloc(p_len + 4);
     memset(buf, 0, p_len + 4);

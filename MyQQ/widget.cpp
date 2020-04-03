@@ -26,13 +26,12 @@ void Widget::runtask()
     std::cout << i++ << std::endl;
     //获取列表
 
-
-
     QStandardItem *item = new QStandardItem("item1");
     model->appendRow(item);
     item = new QStandardItem("item2");
     model->appendRow(item);
     ui->listView->setModel(model);
+
     //获取聊天记录
 }
 
