@@ -30,7 +30,16 @@ public:
 
     bool isLogin();
     bool login(QString name, QString password);
+    
+    //send
     bool sengData(int mode,QString data);
+    bool sendChatBody(QString body, QString name, QString password);
+    
+    //get
+    QStringList getUserList();
+    QStringList getChatData();
+    
+    
     std::list<QString> getdata();
 };
 
