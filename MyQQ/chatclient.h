@@ -3,6 +3,8 @@
 #include <QString>
 #include<vector>
 #include<list>
+#include <QStringList>
+
 
 
 class chatClient
@@ -33,7 +35,7 @@ public:
     
     //send
     bool sengData(int mode,QString data);
-    bool sendChatBody(QString body, QString name, QString password);
+    bool sendChatBody(QString body);
     
     //get
     QStringList getUserList();

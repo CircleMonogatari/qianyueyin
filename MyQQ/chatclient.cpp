@@ -1,6 +1,7 @@
 #include "chatclient.h"
 #include <iostream>
 
+
 chatClient::chatClient()
 {
     this->name = "";
@@ -42,8 +43,29 @@ bool chatClient::login(QString name, QString password)
     return true;
 }
 
-bool chatClient::sendChatBody(QString body, QString name, QString password){
-     return true;
+static QStringList qls;
+//发送聊天消息
+bool chatClient::sendChatBody(QString body){
+    std::cout << "发送了消息:" << body.toStdString() <<std::endl;
+    qls.append(QString(body));
+    return true;
+}
+
+
+//获取用户列表
+QStringList chatClient::getUserList()
+{
+    QStringList ql;
+    ql.append(QString("123"));
+    return ql;
+}
+
+//获取聊天内容
+QStringList chatClient::getChatData()
+{
+//    QStringList ql;
+//    ql.append(QString("消息\n"));
+    return qls;
 }
 
 
