@@ -39,7 +39,7 @@ int main() {
     printf("1\n");
 
     char *p = (char *) "123456";
-    int p_len = htonl(strlen(p));
+    int p_len = (strlen(p));
 
     char *buf = (char *) malloc(p_len + 4);
     memset(buf, 0, p_len + 4);
@@ -49,8 +49,8 @@ int main() {
     printf("2\n");
 
 
-    printf("--%x--\n", *(int *) buf);
-    printf("--%s--\n", buf + 4);
+//    printf("--%x--\n", *(int *) buf);
+//    printf("--%s--\n", buf + 4);
 
 
     if (send(socketfd, buf, p_len + 4, 0) < 0) {
@@ -60,10 +60,10 @@ int main() {
 
     printf("3\n");
 
-
-    int a = 0x123456;
-    int b = 0;
-    b = htonl(a); //56341200 转为小端
+//
+//    int a = 0x123456;
+//    int b = 0;
+//    b = htonl(a); //56341200 转为小端
 
 
 

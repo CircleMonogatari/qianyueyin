@@ -1,10 +1,12 @@
 #ifndef CHATCLIENT_H
 #define CHATCLIENT_H
 #include <QString>
+#include <QStringList>
+#include <QtNetwork>
+#include <QTcpSocket>
+
 #include<vector>
 #include<list>
-#include <QStringList>
-
 
 
 class chatClient
@@ -25,7 +27,8 @@ public:
         GETUSERLISTS,
         GETCHATDATA,
         LOGIN,
-        REGISTER
+        REGISTER,
+        SENDDATA
     };
 
     static chatClient* getChatClientInstance();
@@ -34,15 +37,14 @@ public:
     bool login(QString name, QString password);
     
     //send
-    bool sengData(int mode,QString data);
+    QString sengData(int mode,QString data);
     bool sendChatBody(QString body);
     
     //get
     QStringList getUserList();
     QStringList getChatData();
-    
-    
     std::list<QString> getdata();
+    int readData(QTcpSocket *qc, char *outbuf);
 };
 
 #endif // CHATCLIENT_H

@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     chatClient *c = chatClient::getChatClientInstance();
-    //åˆ¤æ–­æ˜¯å¦ç™»å½•
+    //ÅÐ¶ÏÊÇ·ñµÇÂ¼
     
     while (!(c->isLogin())) {
         Login l;

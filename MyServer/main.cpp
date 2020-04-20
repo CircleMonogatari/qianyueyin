@@ -7,7 +7,7 @@ int main() {
 
     Server* s = Server::getServerInstance();
 
-    cout << "123 " <<endl;
+    cout << "服务器启动 " <<endl;
     s->run(8090);
     return 0;
 
