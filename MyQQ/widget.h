@@ -2,6 +2,12 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QTime>
+#include <QTimer>
+#include <QList>
+#include <QAction>
+#include <QStandardItemModel>
+#include <iostream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -17,5 +23,13 @@ public:
 
 private:
     Ui::Widget *ui;
+    QTimer* time;
+    QStandardItemModel *model;
+
+public slots:
+    void runtask();
+
+private slots:
+    void on_pushButton_clicked();
 };
 #endif // WIDGET_H

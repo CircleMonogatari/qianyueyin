@@ -1,6 +1,16 @@
 #include "Server.hpp"
 
 
+#include <sys/stat.h>
+
+#include <fcntl.h>
+
+#include <errno.h>
+
+#include <netdb.h>
+
+#include <sys/types.h>
+
 #include <sys/socket.h>
 
 #include <netinet/in.h>
@@ -20,12 +30,15 @@
 #define bzero(x, len) (memset((x),'\0', (len)), (void)0)
 
 
+
 //ÉùÃ÷º¯Êý
 int get_line(int sock, char *buf, int size);
 
 string read_all(int sock);
 
 string chat_data(string &data);
+
+int get_client_buf_size(int client);
 
 Server::Server(/* args */) {
 

@@ -48,9 +48,10 @@ public:
     void add_chat_data(string name, string data);
 
 
-private:
-    static vector<User> users;
-    static list<string> chatdatas;
+public:
+    vector<User> users;
+    list<string> chatdatas;
+
 };
 
 
