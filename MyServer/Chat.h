@@ -25,25 +25,25 @@ class Chat {
 
 public:
     /**
-     * æ³¨å†Œç”¨æˆ·
+     * ×¢²áÓÃ»§
      * @param name
      * @param password
-     * @return æˆåŠŸ0 å¤±è´¥-1
+     * @return ³É¹¦0 Ê§°Ü-1
      */
     int registered_user(string name, string password);
 
     /**
-     * ç™»é™†
+     * µÇÂ½
      * @param name
      * @param password
-     * @return æˆåŠŸ0 å¤±è´¥-1
+     * @return ³É¹¦0 Ê§°Ü-1
      */
     int log_in(string name, string password);
 
     /**
-     * èŠå¤©æ¡†å¯¹è¯
-     * @param name å‘è¨€äºº
-     * @param data å‘é€æ¶ˆæ¯
+     * ÁÄÌì¿ò¶Ô»°
+     * @param name ·¢ÑÔÈË
+     * @param data ·¢ËÍÏûÏ¢
      */
     void add_chat_data(string name, string data);
 

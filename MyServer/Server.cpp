@@ -1,16 +1,6 @@
 #include "Server.hpp"
 
 
-#include <sys/stat.h>
-
-#include <fcntl.h>
-
-#include <errno.h>
-
-#include <netdb.h>
-
-#include <sys/types.h>
-
 #include <sys/socket.h>
 
 #include <netinet/in.h>
@@ -28,14 +18,14 @@
 #include "Chat.h"
 
 #define bzero(x, len) (memset((x),'\0', (len)), (void)0)
-#define DATA_LEN 4096
 
-//å£°æ˜å‡½æ•°
+
+//ÉùÃ÷º¯Êı
 int get_line(int sock, char *buf, int size);
 
-int read_all(int sock, char *buf, int size);
+string read_all(int sock);
 
-int chat_data(char *data, int len, char *res_data);
+string chat_data(string &data);
 
 Server::Server(/* args */) {
 
@@ -59,40 +49,40 @@ Server *Server::getServerInstance() {
 }
 
 int Server::run(int port) {
-//è°ƒç”¨socketå‡½æ•°è¿”å›çš„æ–‡ä»¶æè¿°ç¬¦
-    int serverSocket;    //å£°æ˜ä¸¤ä¸ªå¥—æ¥å­—sockaddr_inç»“æ„ä½“å˜é‡ï¼Œåˆ†åˆ«è¡¨ç¤ºå®¢æˆ·ç«¯å’ŒæœåŠ¡å™¨
+//µ÷ÓÃsocketº¯Êı·µ»ØµÄÎÄ¼şÃèÊö·û
+    int serverSocket;    //ÉùÃ÷Á½¸öÌ×½Ó×Ösockaddr_in½á¹¹Ìå±äÁ¿£¬·Ö±ğ±íÊ¾¿Í»§¶ËºÍ·şÎñÆ÷
     struct sockaddr_in server_addr;
     struct sockaddr_in client_addr;
     int client_addr_len = sizeof(client_addr);
     int client;
 
-    int iDataNum;    //socketå‡½æ•°ï¼Œå¤±è´¥è¿”å›-1
+    int iDataNum;    //socketº¯Êı£¬Ê§°Ü·µ»Ø-1
     //int socket(int domain, int type, int protocol);
-    // ç¬¬ä¸€ä¸ªå‚æ•°è¡¨ç¤ºä½¿ç”¨çš„åœ°å€ç±»å‹ï¼Œä¸€èˆ¬éƒ½æ˜¯ipv4ï¼ŒAF_INET
-    //ç¬¬äºŒä¸ªå‚æ•°è¡¨ç¤ºå¥—æ¥å­—ç±»å‹ï¼štcpï¼šé¢å‘è¿æ¥çš„ç¨³å®šæ•°æ®ä¼ è¾“SOCK_STREAM
-    //ç¬¬ä¸‰ä¸ªå‚æ•°è®¾ç½®ä¸º0
+    // µÚÒ»¸ö²ÎÊı±íÊ¾Ê¹ÓÃµÄµØÖ·ÀàĞÍ£¬Ò»°ã¶¼ÊÇipv4£¬AF_INET
+    //µÚ¶ş¸ö²ÎÊı±íÊ¾Ì×½Ó×ÖÀàĞÍ£ºtcp£ºÃæÏòÁ¬½ÓµÄÎÈ¶¨Êı¾İ´«ÊäSOCK_STREAM
+    //µÚÈı¸ö²ÎÊıÉèÖÃÎª0
 
     if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket");
         return 1;
     }
 
-    //ç«¯å£å¤ç”¨
+    //¶Ë¿Ú¸´ÓÃ
     int opt = 1;
     setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (const void *) &opt, sizeof(opt));
 
 
-    bzero(&server_addr, sizeof(server_addr));    //åˆå§‹åŒ–æœåŠ¡å™¨ç«¯çš„å¥—æ¥å­—ï¼Œå¹¶ç”¨htonså’Œhtonlå°†ç«¯å£å’Œåœ°å€è½¬æˆç½‘ç»œå­—èŠ‚åº
+    bzero(&server_addr, sizeof(server_addr));    //³õÊ¼»¯·şÎñÆ÷¶ËµÄÌ×½Ó×Ö£¬²¢ÓÃhtonsºÍhtonl½«¶Ë¿ÚºÍµØÖ·×ª³ÉÍøÂç×Ö½ÚĞò
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);    //ipå¯æ˜¯æ˜¯æœ¬æœåŠ¡å™¨çš„ipï¼Œä¹Ÿå¯ä»¥ç”¨å®INADDR_ANYä»£æ›¿ï¼Œä»£è¡¨0.0.0.0ï¼Œè¡¨æ˜æ‰€æœ‰åœ°å€
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);    //å¯¹äºbindï¼Œacceptä¹‹ç±»çš„å‡½æ•°ï¼Œé‡Œé¢å¥—æ¥å­—å‚æ•°éƒ½æ˜¯éœ€è¦å¼ºåˆ¶è½¬æ¢æˆ(struct sockaddr *)
-    //bindä¸‰ä¸ªå‚æ•°ï¼šæœåŠ¡å™¨ç«¯çš„å¥—æ¥å­—çš„æ–‡ä»¶æè¿°ç¬¦ï¼Œ
+    server_addr.sin_port = htons(port);    //ip¿ÉÊÇÊÇ±¾·şÎñÆ÷µÄip£¬Ò²¿ÉÒÔÓÃºêINADDR_ANY´úÌæ£¬´ú±í0.0.0.0£¬±íÃ÷ËùÓĞµØÖ·
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);    //¶ÔÓÚbind£¬acceptÖ®ÀàµÄº¯Êı£¬ÀïÃæÌ×½Ó×Ö²ÎÊı¶¼ÊÇĞèÒªÇ¿ÖÆ×ª»»³É(struct sockaddr *)
+    //bindÈı¸ö²ÎÊı£º·şÎñÆ÷¶ËµÄÌ×½Ó×ÖµÄÎÄ¼şÃèÊö·û£¬
     if (bind(serverSocket, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
         perror("connect");
         return 1;
     }
 
-    //è®¾ç½®æœåŠ¡å™¨ä¸Šçš„socketä¸ºç›‘å¬çŠ¶æ€
+    //ÉèÖÃ·şÎñÆ÷ÉÏµÄsocketÎª¼àÌı×´Ì¬
 
     if (listen(serverSocket, 5) < 0) {
         perror("listen");
@@ -100,50 +90,40 @@ int Server::run(int port) {
     }
 
     while (1) {
-        char data[DATA_LEN];
-        char res_data[DATA_LEN];
-        int data_len = 0;
 
-
-        //è°ƒç”¨acceptå‡½æ•°åï¼Œä¼šè¿›å…¥é˜»å¡çŠ¶æ€
-        //acceptè¿”å›ä¸€ä¸ªå¥—æ¥å­—çš„æ–‡ä»¶æè¿°ç¬¦ï¼Œè¿™æ ·æœåŠ¡å™¨ç«¯ä¾¿æœ‰ä¸¤ä¸ªå¥—æ¥å­—çš„æ–‡ä»¶æè¿°ç¬¦ï¼Œ
-        //serverSocketå’Œclientã€‚
-        //serverSocketä»ç„¶ç»§ç»­åœ¨ç›‘å¬çŠ¶æ€ï¼Œclientåˆ™è´Ÿè´£æ¥æ”¶å’Œå‘é€æ•°æ®
-        //clientAddræ˜¯ä¸€ä¸ªä¼ å‡ºå‚æ•°ï¼Œacceptè¿”å›æ—¶ï¼Œä¼ å‡ºå®¢æˆ·ç«¯çš„åœ°å€å’Œç«¯å£å·
-        //client_addr_lenæ˜¯ä¸€ä¸ªä¼ å…¥-ä¼ å‡ºå‚æ•°ï¼Œä¼ å…¥çš„æ˜¯è°ƒç”¨è€…æä¾›çš„ç¼“å†²åŒºçš„clientAddrçš„é•¿åº¦ï¼Œä»¥é¿å…ç¼“å†²åŒºæº¢å‡ºã€‚
-        //ä¼ å‡ºçš„æ˜¯å®¢æˆ·ç«¯åœ°å€ç»“æ„ä½“çš„å®é™…é•¿åº¦ã€‚
-        //å‡ºé”™è¿”å›-1
-        printf("ç›‘å¬ç«¯å£: %d\n", port);
+        //µ÷ÓÃacceptº¯Êıºó£¬»á½øÈë×èÈû×´Ì¬
+        //accept·µ»ØÒ»¸öÌ×½Ó×ÖµÄÎÄ¼şÃèÊö·û£¬ÕâÑù·şÎñÆ÷¶Ë±ãÓĞÁ½¸öÌ×½Ó×ÖµÄÎÄ¼şÃèÊö·û£¬
+        //serverSocketºÍclient¡£
+        //serverSocketÈÔÈ»¼ÌĞøÔÚ¼àÌı×´Ì¬£¬clientÔò¸ºÔğ½ÓÊÕºÍ·¢ËÍÊı¾İ
+        //clientAddrÊÇÒ»¸ö´«³ö²ÎÊı£¬accept·µ»ØÊ±£¬´«³ö¿Í»§¶ËµÄµØÖ·ºÍ¶Ë¿ÚºÅ
+        //client_addr_lenÊÇÒ»¸ö´«Èë-´«³ö²ÎÊı£¬´«ÈëµÄÊÇµ÷ÓÃÕßÌá¹©µÄ»º³åÇøµÄclientAddrµÄ³¤¶È£¬ÒÔ±ÜÃâ»º³åÇøÒç³ö¡£
+        //´«³öµÄÊÇ¿Í»§¶ËµØÖ·½á¹¹ÌåµÄÊµ¼Ê³¤¶È¡£
+        //³ö´í·µ»Ø-1
+        printf("¼àÌı¶Ë¿Ú: %d\n", port);
+        printf("µÈ´ıÁ¬½Ó...\n");
         client = accept(serverSocket, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
         if (client < 0) {
             perror("accept");
             continue;
         }
-        printf("ç­‰å¾…æ¶ˆæ¯...\n");
-        //inet_ntoa ipåœ°å€è½¬æ¢å‡½æ•°ï¼Œå°†ç½‘ç»œå­—èŠ‚åºIPè½¬æ¢ä¸ºç‚¹åˆ†åè¿›åˆ¶IP
-        //è¡¨è¾¾å¼ï¼šchar *inet_ntoa (struct in_addr);
+
+        //inet_ntoa ipµØÖ·×ª»»º¯Êı£¬½«ÍøÂç×Ö½ÚĞòIP×ª»»Îªµã·ÖÊ®½øÖÆIP
+        //±í´ïÊ½£ºchar *inet_ntoa (struct in_addr);
         printf("IP is %s\n", inet_ntoa(client_addr.sin_addr));
         printf("Port is %d\n", htons(client_addr.sin_port));
 
-        //åˆå§‹åŒ–
-        memset(data, 0, 4096);
-
-        //è¯»å–æ•°æ®
-        data_len = read_all(client, data, DATA_LEN);
-        if (data_len <= 0) {
-            data_len = 0;
+        //¶ÁÈ¡Êı¾İ
+        string data = read_all(client);
+        if (data.size() > 0) {
+            //´¦ÀíÊı¾İ
+            string res_data = chat_data(data);
+            //»Ø·¢Êı¾İ
+            send(client, res_data.c_str(), res_data.size(), 0);
         }
+        //»Ø·¢Êı¾İÍê±Ï
+        printf((char *) "»Ø·¢Êı¾İÍê±Ï\n");
 
-        //å¤„ç†æ•°æ®
-        int res_data_n = chat_data(data, data_len, res_data);
-        //å›å‘æ•°æ®
-        send(client, res_data, res_data_n, 0);
-        printf("\n\n[%s]", res_data);
-
-        //å›å‘æ•°æ®å®Œæ¯•
-        printf((char *) "å›å‘æ•°æ®å®Œæ¯•\n");
-
-        //å…³é—­socket
+        //¹Ø±Õsocket
         close(client);
 
     }
@@ -152,55 +132,54 @@ int Server::run(int port) {
     return 0;
 }
 
-int chat_data(char *data, int len, char *res_data) {
-    printf("æ¥å—åˆ°æ¶ˆæ¯:");
-    printf("%s", data);
+string chat_data(string &data) {
+    string Response;
+    printf("%s", data.c_str());
     printf("\n");
 
-    char *p = (char *) "æœåŠ¡å™¨å·²ç»æ”¶åˆ°";
+    char *p = (char *) "´¦ÀíÊı¾İÖĞ";
 
-    memcpy(res_data, p, strlen(p));
-
-    printf("å‡†å¤‡å‘é€æ¶ˆæ¯:\n");
-    printf("1. %s %d\n", p, strlen(p));
-    printf("2. %s  %d\n", res_data, strlen(res_data));
-    printf("\n");
-
-    return strlen(p);
+    return Response;
 }
 
-int read_all(int sock, char *data, int size) {
+int read_data_len(int sock) {
     int n = 0;
-    int pos = 0;
-    char *p = data;
 
-    //è¯»å–åŒ…å¤´ å‰4ä¸ªå­—èŠ‚
+    recv(sock, &n, 4, 0);
+    n = ntohl(n);
+    return n;
+}
 
-
-
-    while (1) {
-        printf("ã€è¯»åˆ°æ•°æ®äº†ã€‘\n");
-        n = 0;
-        char buf[64];
-        memset(buf, 0, 64);
-        n = recv(sock, buf, 64, 0);
-        printf("[%s]\n", buf);
-        if (n <= 0) {
-//            if (!(errno == EAGAIN)) {
-            break;
-//            }
-        }
-        pos += n;
-        if (pos > size) {
-            printf("æ•°æ®åŒ…è¿‡å¤§\n");
-            return pos;
-        }
-        printf("[%s]\n", buf);
-        memcpy(p, buf, n);
-        p = p + n;
-
+string read_all(int sock) {
+    string Request;
+    int data_len = 0;
+    int n = 0;
+    printf("¿ªÊ¼½ÓÊÕÊı¾İ\n");
+    n = read_data_len(sock);
+    if (n <= 0) {
+        return Request;
     }
-    return pos;
+    printf("ÊÕµ½Êı¾İ°ü£º%d ¸ö×Ö½Ú\n", data_len);
+
+    //¶ÁÈ¡Êı¾İ
+
+    char *p = (char *) malloc(data_len);
+    n = 0;
+
+    memset(p, 0, data_len);
+    n = recv(sock, p, data_len, 0);
+    if (n != data_len) {
+        printf("½ÓÊÕ´íÎó\n");
+    }
+//        if (n <= 0) {
+//          if (!(errno == EAGAIN))
+//                break;
+//        }
+
+    //copyÄÚÈİ
+    Request.append(p, data_len);
+    printf("ÒÑ¶ÁÈ¡ÄÚÈİ[%s]\n", Request.c_str());
+    return Request;
 }
 
 int get_line(int sock, char *buf, int size) {
@@ -208,24 +187,24 @@ int get_line(int sock, char *buf, int size) {
     char c = '\0';
     int n;
 
-    /*æŠŠç»ˆæ­¢æ¡ä»¶ç»Ÿä¸€ä¸º \n æ¢è¡Œç¬¦ï¼Œæ ‡å‡†åŒ– buf æ•°ç»„*/
+    /*°ÑÖÕÖ¹Ìõ¼şÍ³Ò»Îª \n »»ĞĞ·û£¬±ê×¼»¯ buf Êı×é*/
     while ((i < size - 1) && (c != '\n')) {
-        /*ä¸€æ¬¡ä»…æ¥æ”¶ä¸€ä¸ªå­—èŠ‚*/
+        /*Ò»´Î½ö½ÓÊÕÒ»¸ö×Ö½Ú*/
         n = recv(sock, &c, 1, 0);
         /* DEBUG printf("%02X\n", c); */
         if (n > 0) {
-            /*æ”¶åˆ° \r åˆ™ç»§ç»­æ¥æ”¶ä¸‹ä¸ªå­—èŠ‚ï¼Œå› ä¸ºæ¢è¡Œç¬¦å¯èƒ½æ˜¯ \r\n */
+            /*ÊÕµ½ \r Ôò¼ÌĞø½ÓÊÕÏÂ¸ö×Ö½Ú£¬ÒòÎª»»ĞĞ·û¿ÉÄÜÊÇ \r\n */
             if (c == '\r') {
-                /*ä½¿ç”¨ MSG_PEEK æ ‡å¿—ä½¿ä¸‹ä¸€æ¬¡è¯»å–ä¾ç„¶å¯ä»¥å¾—åˆ°è¿™æ¬¡è¯»å–çš„å†…å®¹ï¼Œå¯è®¤ä¸ºæ¥æ”¶çª—å£ä¸æ»‘åŠ¨*/
+                /*Ê¹ÓÃ MSG_PEEK ±êÖ¾Ê¹ÏÂÒ»´Î¶ÁÈ¡ÒÀÈ»¿ÉÒÔµÃµ½Õâ´Î¶ÁÈ¡µÄÄÚÈİ£¬¿ÉÈÏÎª½ÓÊÕ´°¿Ú²»»¬¶¯*/
                 n = recv(sock, &c, 1, MSG_PEEK);
                 /* DEBUG printf("%02X\n", c); */
-                /*ä½†å¦‚æœæ˜¯æ¢è¡Œç¬¦åˆ™æŠŠå®ƒå¸æ”¶æ‰*/
+                /*µ«Èç¹ûÊÇ»»ĞĞ·ûÔò°ÑËüÎüÊÕµô*/
                 if ((n > 0) && (c == '\n'))
                     recv(sock, &c, 1, 0);
                 else
                     c = '\n';
             }
-            /*å­˜åˆ°ç¼“å†²åŒº*/
+            /*´æµ½»º³åÇø*/
             buf[i] = c;
             i++;
         } else
@@ -233,7 +212,7 @@ int get_line(int sock, char *buf, int size) {
     }
     buf[i] = '\0';
 
-    /*è¿”å› buf æ•°ç»„å¤§å°*/
+    /*·µ»Ø buf Êı×é´óĞ¡*/
     return (i);
 }
 

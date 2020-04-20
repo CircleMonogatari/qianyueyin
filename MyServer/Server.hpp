@@ -1,7 +1,6 @@
 
 
-class Server
-{
+class Server {
 private:
     Server(/* args */);
 
@@ -18,7 +17,7 @@ public:
     static Server *getServerInstance();
 
     /**
-     * å¯åŠ¨socket
+     * Æô¶¯socket
      * @param port
      * @return
      */
