@@ -20,14 +20,17 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+    void RefreshUsers();
+    void RefreshChat();
 
 private:
     Ui::Widget *ui;
     QTimer* time;
-    QStandardItemModel *model;
+
 
 public slots:
     void runtask();
+
 
 private slots:
     void on_pushButton_clicked();

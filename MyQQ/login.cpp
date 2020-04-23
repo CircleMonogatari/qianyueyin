@@ -16,24 +16,36 @@ Login::~Login()
     delete ui;
 }
 
-//关闭
+//�ر�
 void Login::on_pushButton_2_clicked()
 {
     exit(0);
 }
 
-//登陆
+//��½
 void Login::on_pushButton_clicked()
 {
     chatClient* c = chatClient::getChatClientInstance();
-    QString name = ui->textEdit_2->toMarkdown();
-    QString password = ui->textEdit->toMarkdown();
-
-    if (c->login(name, password)){
+    QString name = ui->textEdit_2->toPlainText();
+    QString password = ui->textEdit->toPlainText();
+    QString Res = c->login(name, password);
+    if (Res == QString("ok")){
         this->reject();
         return;
     }
-    QMessageBox::information(this,tr("Error"),QStringLiteral("账号或密码不正确"),QMessageBox::Ok);
-
+    QMessageBox::information(NULL, "Error", QString::fromLocal8Bit(Res.toUtf8()));
 }
 
+
+void Login::on_pushButton_3_clicked()
+{
+    chatClient* c = chatClient::getChatClientInstance();
+    QString name = ui->textEdit_2->toPlainText();
+    QString password = ui->textEdit->toPlainText();
+    QString Res = c->autoRegister(name, password);
+    if (Res == QString("ok")){
+        this->reject();
+        return;
+    }
+    QMessageBox::information(NULL, "Error", QString::fromLocal8Bit(Res.toUtf8()));
+}

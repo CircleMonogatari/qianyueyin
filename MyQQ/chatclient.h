@@ -15,6 +15,7 @@ private:
     QString name;
     QString password;
     QString timeTag;
+    int pos;
 
     chatClient();
     chatClient(const chatClient&);
@@ -24,25 +25,26 @@ private:
 
 public:
     enum typeData{
-        GETUSERLISTS,
-        GETCHATDATA,
-        LOGIN,
-        REGISTER,
-        SENDDATA
+        SEND_TYPE_GETUSERLISTS,
+        SEND_TYPE_GETCHATDATA,
+        SEND_TYPE_LOGIN,
+        SEND_TYPE_REGISTER,
+        SEND_TYPE_SENDDATA
     };
 
     static chatClient* getChatClientInstance();
 
     bool isLogin();
-    bool login(QString name, QString password);
+    QString login(QString name, QString password);
+    QString autoRegister(QString name, QString password);
     
     //send
-    QString sengData(int mode,QString data);
-    bool sendChatBody(QString body);
+    QString sendData(int mode,QString data);
+    QString sendChatBody(QString body);
     
     //get
     QStringList getUserList();
-    QStringList getChatData();
+    QString getChatData();
     std::list<QString> getdata();
     int readData(QTcpSocket *qc, char *outbuf);
 };

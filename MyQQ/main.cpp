@@ -8,6 +8,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
     chatClient *c = chatClient::getChatClientInstance();
     //ÅÐ¶ÏÊÇ·ñµÇÂ¼
     
@@ -20,5 +21,6 @@ int main(int argc, char *argv[])
     Widget w;
     w.setWindowIcon(QIcon(":/Image/qq.png"));
     w.show();
+
     return a.exec();
 }

@@ -5,11 +5,92 @@
 #include "Chat.h"
 
 
-int Chat::registered_user(string name, string password) {
+Chat *Chat::instance = nullptr;
+vector<User> Chat::users;
+map<string, int> Chat::usersOl;
+vector<string> Chat::chatdatas;
 
-    for (vector<User>::iterator it = this->users.begin();  it != this->users.end() ; it++) {
+
+/**
+ * 登陆账号
+ * @param 用户名 name
+ * @param 密码 password
+ * @return 正确 ok   失败 返回原因
+ */
+string Chat::chat_login(string name, string password) {
+    for (vector<User>::iterator it = users.begin();  it != users.end() ; it++) {
         if (it->name == name){
-            return -1;
+            if (it->password == password){
+                return string("ok");
+            }
+        }
+    }
+
+    return string("账号或密码不正确");
+}
+
+/**
+ * 获取在线用户列表
+ * @param data
+ * @return
+ */
+string Chat::chat_get_userlist(string &data) {
+    string Res;
+    time_t t;
+    t = time(NULL);
+    int des = time(&t);
+    //刷新时间
+    this->usersOl[data] =  des;
+
+    map<string, int>::iterator it = this->usersOl.begin();
+    map<string, int>::iterator end = this->usersOl.end();
+
+    int num = 0;
+    while(it != end){
+
+        if(des - it->second > 60){
+            it++;
+            continue;
+        }
+
+        std::ostringstream s;
+        s << it->first << "\n";
+        Res.append(s.str());
+        it++;
+        num++;
+    }
+    printf("---当前在线人数:%d\n", num);
+    return Res;
+}
+
+
+
+string Chat::chat_get_data(string &data) {
+    string Res;
+
+    int pos = stoi(data);
+
+
+    std::ostringstream s;
+    s << this->chatdatas.size() << "\n";
+
+    Res.append(s.str());
+    for(;pos < this->chatdatas.size(); pos++){
+        Res.append(this->chatdatas.at(pos));
+    }
+    return Res;
+}
+
+string Chat::chat_set_data(string &data) {
+
+    this->chatdatas.push_back(data);
+    return string("ok");
+}
+
+string Chat::chat_register(string name, string password) {
+    for (vector<User>::iterator it = users.begin();  it != users.end() ; it++) {
+        if (it->name == name){
+            return  string("该用户已存在");
         }
     }
 
@@ -17,22 +98,28 @@ int Chat::registered_user(string name, string password) {
     User u;
     u.name = name;
     u.password = password;
-    this->users.push_back(u);
+    users.push_back(u);
 
-    return 0;
+    return  string("ok");
 }
 
-int Chat::log_in(string name, string password) {
-    for (vector<User>::iterator it = this->users.begin();  it != this->users.end() ; it++) {
-        if (it->name == name){
-            if (it->password == password){
-                return 0;
-            }
-        }
+Chat *Chat::getChatInstance() {
+    if (Chat::instance == nullptr){
+        Chat::instance = new Chat();
     }
-    return -1;
+
+    return Chat::instance;
 }
 
-void Chat::add_chat_data(string name, string data) {
+Chat::Chat() {
+
+}
+
+Chat::~Chat() {
+
+}
+
+
+Chat::Chat(const Chat &) {
 
 }

@@ -1,6 +1,8 @@
 #include "widget.h"
 #include "ui_widget.h"
 #include "chatclient.h"
+#include <QTableWidget>
+#include <QMessageBox>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -8,10 +10,8 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
     time = new QTimer(this);
-    time->start(2000);
+    time->start(4000);
     connect(time, SIGNAL(timeout()), this, SLOT(runtask()));
-    model = new QStandardItemModel(this);
-
 
 }
 
@@ -20,29 +20,52 @@ Widget::~Widget()
     delete ui;
 }
 
-int i = 0;
-
-void Widget::runtask()
+//刷新用户列表
+void Widget::RefreshUsers()
 {
-    std::cout << i++ << std::endl;
     //获取控制权柄
     chatClient*c = chatClient::getChatClientInstance();
 
-    //加载用户列表
-    QStandardItem *item = new QStandardItem("item1");
-    model->appendRow(item);
-    item = new QStandardItem("item2");
-    model->appendRow(item);
-    ui->listView->setModel(model);
 
-    //获取聊天记录
-    QStringList ql = c->getChatData();
-    QStringList::iterator i;
-    for (i = ql.begin(); i != ql.end(); ++i) {
-        ui->textEdit_2->append(*i);
+    QStringList users = c->getUserList();
+
+    //加载用户列表
+    int iRow = ui->tableWidget->rowCount();
+    ui->tableWidget->setRowCount(users.size());
+    qDebug()<< users;
+    for (int i = 0; i < users.size(); i++) {
+
+        QTableWidgetItem* it = new QTableWidgetItem(users.at(i));
+        ui->tableWidget->setItem(iRow, i, it);
     }
 
+}
 
+//刷新聊天框
+void Widget::RefreshChat()
+{
+    //获取控制权柄
+    chatClient*c = chatClient::getChatClientInstance();
+
+    //获取聊天记录
+    QString ql = c->getChatData();
+    if(ql == ""){
+        return;
+    }
+
+    ui->textEdit_2->append(ql);
+
+}
+
+int i = 0;
+//定时任务 用于刷新聊天界面
+void Widget::runtask()
+{
+    if(i%5 == 0){
+        this->RefreshUsers();
+    }
+    this->RefreshChat();
+    std::cout << i++ << std::endl;
 }
 
 
@@ -50,11 +73,17 @@ void Widget::runtask()
 void Widget::on_pushButton_clicked()
 {
     //获取输入的聊天内容
-    QString body = ui->textEdit->toMarkdown();
+    QString body = ui->textEdit->toPlainText();
     
+    if(body.size() > 255){
+       QMessageBox::information(NULL, "Error", QString::fromLocal8Bit("发送内容过大， 请调整"));
+    }
+
     //发送内容
     chatClient* c = chatClient::getChatClientInstance();
 
-    c->sendChatBody(body);
+    if(c->sendChatBody(body) == QString("ok")){
+        ui->textEdit->clear();
+    }
     
 }

@@ -1,6 +1,5 @@
 #include "Server.hpp"
 
-
 #include <sys/stat.h>
 
 #include <fcntl.h>
@@ -12,6 +11,8 @@
 #include <sys/types.h>
 
 #include <sys/socket.h>
+
+#include <sys/time.h>
 
 #include <netinet/in.h>
 
@@ -27,9 +28,20 @@
 
 #include "Chat.h"
 
+#include <string>
+#include <vector>
+
 #define bzero(x, len) (memset((x),'\0', (len)), (void)0)
 
 
+
+enum typeData{
+    SEND_TYPE_GETUSERLISTS,
+    SEND_TYPE_GETCHATDATA,
+    SEND_TYPE_LOGIN,
+    SEND_TYPE_REGISTER,
+    SEND_TYPE_SENDDATA
+};
 
 //声明函数
 int get_line(int sock, char *buf, int size);
@@ -122,6 +134,7 @@ int Server::run(int port) {
 
         //inet_ntoa ip地址转换函数，将网络字节序IP转换为点分十进制IP
         //表达式：char *inet_ntoa (struct in_addr);
+        printf("============接到链接=================\n");
         printf("IP is %s\n", inet_ntoa(client_addr.sin_addr));
         printf("Port is %d\n", htons(client_addr.sin_port));
 
@@ -131,10 +144,11 @@ int Server::run(int port) {
             //处理数据
             string res_data = chat_data(data);
             //回发数据
+            printf("----回发数据：%s\n", res_data.c_str());
             send(client, res_data.c_str(), res_data.size(), 0);
         }
         //回发数据完毕
-        printf((char *) "回发数据完毕\n");
+        printf((char *) "--------------回发数据完毕-------------\n");
 
         //关闭socket
         close(client);
@@ -145,12 +159,63 @@ int Server::run(int port) {
     return 0;
 }
 
+void split(const string&s, vector<string>& tokens, const string& delimiters= " "){
+
+    //找到delimiters 位置
+    int pos = s.find(delimiters);
+    if(pos > 0){
+        string user = string(s.c_str(), pos); //字符串是拷贝多少个
+        string password = string(s, pos+1);       //string 是从第几个开始
+        tokens.push_back(user);
+        tokens.push_back(password);
+    }
+
+}
+
+
+
 string chat_data(string &data) {
     string Response;
-    printf("%s", data.c_str());
+    string mode(data.c_str(), 1);
+    string p(data, 1);
+    printf("%s", p.c_str());
+    printf("mode is %d", std::stoi(mode));
     printf("\n");
+    Chat* c = Chat::getChatInstance();
+    vector<string> d;
 
-    char *p = (char *) "处理数据中";
+    printf("开始处理：\n --mode= %s--\n", mode.c_str());
+    printf("--%s--\n", p);
+
+    switch(std::stoi(mode)){
+        case SEND_TYPE_GETCHATDATA:
+            split(p, d, "=");
+            Response.append(c->chat_get_data(d.at(1)));
+            break;
+        case SEND_TYPE_GETUSERLISTS:
+            Response.append(c->chat_get_userlist(p));
+            break;
+        case SEND_TYPE_LOGIN:
+
+            split(p, d, "\n");
+            if(d.size() != 2){
+                Response.append(string("参数不正确"));
+            }
+            Response.append(c->chat_login(d.at(0), d.at(1)));
+            break;
+
+        case SEND_TYPE_REGISTER:
+
+            split(p, d, "\n");
+            if(d.size() != 2){
+                Response.append(string("参数不正确"));
+            }
+            Response.append(c->chat_register(d.at(0), d.at(1)));
+            break;
+        case SEND_TYPE_SENDDATA:
+            Response.append(c->chat_set_data(p));
+            break;
+    }
 
     return Response;
 }
@@ -168,18 +233,24 @@ string read_all(int sock) {
     int data_len = 0;
     int n = 0;
     printf("开始接收数据\n");
-    n = read_data_len(sock);
-    if (n <= 0) {
+    data_len = read_data_len(sock);
+    if (data_len <= 0) {
         return Request;
     }
+
+    if (data_len > 4096 * 4){
+        printf("数据过大 不合理\n");
+        return Request;
+    }
+
     printf("收到数据包：%d 个字节\n", data_len);
 
     //读取数据
 
-    char *p = (char *) malloc(data_len);
+    char *p = (char *) malloc(data_len+1);
     n = 0;
 
-    memset(p, 0, data_len);
+    memset(p, 0, data_len+1);
     n = recv(sock, p, data_len, 0);
     if (n != data_len) {
         printf("接收错误\n");
@@ -191,7 +262,8 @@ string read_all(int sock) {
 
     //copy内容
     Request.append(p, data_len);
-    printf("已读取内容[%s]\n", Request.c_str());
+    free(p);
+    printf("读取完毕\n");
     return Request;
 }
 
@@ -228,6 +300,4 @@ int get_line(int sock, char *buf, int size) {
     /*返回 buf 数组大小*/
     return (i);
 }
-
-
 

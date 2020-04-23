@@ -4,17 +4,14 @@
 
 #ifndef MYSERVER_CHAT_H
 
+#include <sstream>
 #include <vector>
 #include <string>
 #include <list>
+#include <map>
 
 #define MYSERVER_CHAT_H
 using namespace std;
-
-typedef struct chat_data {
-    int type;
-    string data;
-} ChatData;
 
 typedef struct user {
     string password;
@@ -22,35 +19,57 @@ typedef struct user {
 } User;
 
 class Chat {
+private:
+    Chat();
+    ~Chat();
+
+    Chat&operator=(const Chat&);
+    Chat(const Chat&);
 
 public:
-    /**
-     * 注册用户
-     * @param name
-     * @param password
-     * @return 成功0 失败-1
-     */
-    int registered_user(string name, string password);
+
+    static Chat* getChatInstance();
 
     /**
      * 登陆
-     * @param name
-     * @param password
-     * @return 成功0 失败-1
+     * @param data
+     * @return
      */
-    int log_in(string name, string password);
+    static string chat_login(string name, string password);
 
     /**
-     * 聊天框对话
-     * @param name 发言人
-     * @param data 发送消息
+     * 注册
+     * @param data
+     * @return
      */
-    void add_chat_data(string name, string data);
+    string chat_register(string name, string password);
 
+    /**
+     * 获取用户列表
+     * @param data
+     * @return
+     */
+    string chat_get_userlist(string &data);
+
+    /**
+     * 获取聊天记录
+     * @param data
+     * @return
+     */
+    string chat_get_data(string &data);
+
+    /**
+     * 发送消息
+     * @param data
+     * @return
+     */
+    string chat_set_data(string &data);
 
 public:
-    vector<User> users;
-    list<string> chatdatas;
+    static vector<User> users;
+    static map<string, int> usersOl;
+    static vector<string> chatdatas;
+    static Chat* instance;
 
 };
 
